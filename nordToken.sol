@@ -1,6 +1,5 @@
 pragma solidity ^0.5.0;
 
-//Interface for ERC20 Token
 contract TokenInterface {
     function totalSupply() public view returns (uint);
     function balanceOf(address tokenOwner) public view returns (uint balance);
@@ -13,7 +12,6 @@ contract TokenInterface {
     event Approval(address indexed tokenOwner, address indexed spender, uint tokens);
 }
 
-//Safe Math Contract to Avoid Integer Wrap-Arrounds/Overflows
 contract SafeMath {
     function safeAdd(uint a, uint b) public pure returns (uint c) {
         c = a + b;
@@ -36,17 +34,16 @@ contract SafeMath {
     }
 }
 
-//NordToken inheriting TokenInterface and SafeMath Contracts
 contract NordToken is TokenInterface, SafeMath {
-    string public name; //Name of the Token
-    string public symbol; //Symbol for the Token
-    uint8 public decimals; //Decimal Precision with Which Tokens can be Transferred
-    uint256 public total_Supply; //Total Supply of the Token
+    string public name;
+    string public symbol;
+    uint8 public decimals;
+    uint256 public total_Supply;
+    address public contractOwner;
     
-    mapping(address => uint) balances; //Mapping to Store Balance of All Addresses holding the Token
+    mapping(address => uint) balances;
     mapping(address => mapping(address => uint)) allowed;
 
-     //Constructor is triggered when the Smart Contract is Deployed and the total supply of tokens are send to the Account that created the Smart Contract
     constructor() public {
         name = "NordToken";
         symbol = "NTKN";
@@ -54,32 +51,28 @@ contract NordToken is TokenInterface, SafeMath {
         total_Supply = 100000000000000000;
 
         balances[msg.sender] = total_Supply;
+        contractOwner = msg.sender;
         emit Transfer(address(0), msg.sender, total_Supply);
     }
     
-    //Function Returning Total Tokens in Supply
     function totalSupply() public view returns (uint) {
         return total_Supply;
     }
 
-    //Function Returning Tokens held by Address
     function balanceOf(address tokenOwner) public view returns (uint balance) {
         return balances[tokenOwner];
     }
 
-    //Giving Allowance to Another Address to Retrieve Tokens
     function allowance(address tokenOwner, address spender) public view returns (uint remaining) {
         return allowed[tokenOwner][spender];
     }
 
-    //Amount of Allowance the Spender is Allowed to Transfer
     function approve(address spender, uint tokens) public returns (bool success) {
         allowed[msg.sender][spender] = tokens;
         emit Approval(msg.sender, spender, tokens);
         return true;
     }
 
-    //Transfer Tokens to an Address
     function transfer(address to, uint tokens) public returns (bool success) {
         balances[msg.sender] = safeSub(balances[msg.sender], tokens);
         balances[to] = safeAdd(balances[to], tokens);
@@ -87,7 +80,6 @@ contract NordToken is TokenInterface, SafeMath {
         return true;
     }
 
-    //Transfer the Tokens from Sender to Recipient
     function transferFrom(address from, address to, uint tokens) public returns (bool success) {
         balances[from] = safeSub(balances[from], tokens);
         allowed[from][msg.sender] = safeSub(allowed[from][msg.sender], tokens);

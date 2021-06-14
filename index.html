@@ -1,0 +1,492 @@
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <script src="web3.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+  <script src="script.js"></script>
+</head>
+  <body>
+
+    <ul>
+      <li><a style="font-family: sans-serif;">E-Commerce Store (Accepting Nord Token as Payment)</a></li>
+      <li style="float:right"><a class="active" id="balance">Current Balance : 0 NTKN</a></li>
+    </ul>
+
+    <div class="container">
+    <div class="card">
+      <img src="images/jeans.png" alt="Denim Jeans" style="width:100%">
+      <h1>Tailored Jeans</h1>
+      <p class="price">NTKN 1000</p>
+      <p>Some text about the jeans..</p>
+      <p class="button-holder"><button value="10000000000000" onclick="transferTokens(this)">Buy Now</button></p>
+    </div>
+
+    <div class="card">
+      <img src="images/shirt.png" alt="Shirt" style="width:100%">
+      <h1>Shirt</h1>
+      <p class="price">NTKN 1500</p>
+      <p>Some text about the shirt..</p>
+      <p class="button-holder"><button value="15000000000000" onclick="transferTokens(this)">Buy Now</button></p>
+    </div>
+    
+    <div class="card">
+      <img src="images/shoes.png" alt="Shoes" style="width:100%">
+      <h1>Shoes</h1>
+      <p class="price">NTKN 800</p>
+      <p>Some text about the shoes..</p>
+      <p class="button-holder"><button value="8000000000000" onclick="transferTokens(this)">Buy Now</button></p>
+    </div>
+   </div>
+
+   <!-- Modal Starts Here -->
+   <div id="myModal" class="modal">
+
+   <!-- Modal content -->
+    <div class="modal-content">
+      <div class="modal-header">
+        <span class="close">&times;</span>
+        <h2>Order Confirmed</h2>
+      </div>
+      <div class="modal-body">
+        <p id="orderID"></p>
+        <p id="productName"></p>
+        <p id="tokenAmount"></p>
+        <p id="date"></p>
+        <p id="address"></p>
+      </div>
+    </div>
+   </div>
+  </body>
+
+    <script>
+      $(document).ready(function () {
+        if (typeof ethereum !== 'undefined') {
+          ethereum.enable().catch(console.error)
+        }
+        getBalance();
+      });
+
+
+      // Initialize Web3
+      if (typeof web3 !== 'undefined') {
+        web3 = new Web3(web3.currentProvider);
+      } else {
+        console.log("Here");
+        web3 = new Web3(new Web3.providers.HttpProvider('HTTP://127.0.0.1:7545'));
+      }
+
+      var contractAddress = "0x0794a3a133e1845f354ae7f057f91296e127255d";
+
+      var contractAbi = [
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "spender",
+        "type": "address"
+      },
+      {
+        "name": "tokens",
+        "type": "uint256"
+      }
+    ],
+    "name": "approve",
+    "outputs": [
+      {
+        "name": "success",
+        "type": "bool"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "name": "tokens",
+        "type": "uint256"
+      }
+    ],
+    "name": "transfer",
+    "outputs": [
+      {
+        "name": "success",
+        "type": "bool"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "name": "tokens",
+        "type": "uint256"
+      }
+    ],
+    "name": "transferFrom",
+    "outputs": [
+      {
+        "name": "success",
+        "type": "bool"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "name": "tokens",
+        "type": "uint256"
+      }
+    ],
+    "name": "Transfer",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "name": "tokenOwner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "name": "spender",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "name": "tokens",
+        "type": "uint256"
+      }
+    ],
+    "name": "Approval",
+    "type": "event"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "tokenOwner",
+        "type": "address"
+      },
+      {
+        "name": "spender",
+        "type": "address"
+      }
+    ],
+    "name": "allowance",
+    "outputs": [
+      {
+        "name": "remaining",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "tokenOwner",
+        "type": "address"
+      }
+    ],
+    "name": "balanceOf",
+    "outputs": [
+      {
+        "name": "balance",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "contractOwner",
+    "outputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "decimals",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "name",
+    "outputs": [
+      {
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "a",
+        "type": "uint256"
+      },
+      {
+        "name": "b",
+        "type": "uint256"
+      }
+    ],
+    "name": "safeAdd",
+    "outputs": [
+      {
+        "name": "c",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "a",
+        "type": "uint256"
+      },
+      {
+        "name": "b",
+        "type": "uint256"
+      }
+    ],
+    "name": "safeDiv",
+    "outputs": [
+      {
+        "name": "c",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "a",
+        "type": "uint256"
+      },
+      {
+        "name": "b",
+        "type": "uint256"
+      }
+    ],
+    "name": "safeMul",
+    "outputs": [
+      {
+        "name": "c",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "a",
+        "type": "uint256"
+      },
+      {
+        "name": "b",
+        "type": "uint256"
+      }
+    ],
+    "name": "safeSub",
+    "outputs": [
+      {
+        "name": "c",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "symbol",
+    "outputs": [
+      {
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "total_Supply",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "totalSupply",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }
+];
+
+      // Set the Contract
+    var contract = new web3.eth.Contract(contractAbi, contractAddress);
+
+    loadAccount : async () =>{
+       window.ethereum.enable().then((account) =>{
+           const defaultAccount = account[0];
+           web3.eth.defaultAccount = defaultAccount;
+           console.log(defaultAccount);
+
+       })
+    }
+
+    async function getBalance() {
+      var accounts = await web3.eth.getAccounts();
+      var userAccount =accounts[0];
+      contract.methods.balanceOf(userAccount).call(function(err, result) {
+        console.log(result);
+        result = result.slice(0, -10);
+        console.log(result);
+        $('#balance').html("Current Balance : "+result+" NTKN");
+      });
+    }
+
+    var toAddress = "0xf0542Ec57cD01a39c79369212723D0047A8Bda31";
+    var modal = document.getElementById("myModal");
+    var span = document.getElementsByClassName("close")[0];
+
+    async function transferTokens(button){
+      var accounts = await web3.eth.getAccounts();
+      var userAccount =accounts[0];
+      tokenAmount = parseInt(button.value);
+      productName = button.parentElement.parentElement.children[1].innerText;
+      productPrice = button.parentElement.parentElement.children[2].innerText;
+      web3.eth.getAccounts().then(async function(accounts) {
+        var receipt = await contract.methods.transfer(toAddress,tokenAmount).send({ from: accounts[0], gas: 1000000 })
+        .then(receipt => {
+          console.log("Tokens Sent!");
+          getBalance();
+          var date = new Date();
+          var currentDate = date.getDate() + '-' + (date.getMonth() + 1) + '-' + date.getFullYear();
+          var orderID = "";
+          $.get("neworder.php", { pName:productName, pTokens:productPrice, account:userAccount, date:currentDate }, function(data){
+            $('#orderID').html("Order ID : " + data);
+          });
+          //$('#orderID').html("Order ID : " + orderID);
+          $('#productName').html("Product Name : " + productName);
+          $('#tokenAmount').html("Price : " + productPrice);
+          $('#date').html("Date : " + currentDate);
+          $('#address').html("Account : " + userAccount);
+          modal.style.display = "block";
+        });
+      });
+    }
+
+    span.onclick = function() {
+      modal.style.display = "none";
+    }
+
+    window.onclick = function(event) {
+      if (event.target == modal) {
+        modal.style.display = "none";
+      }
+    }
+
+    ethereum.on('accountsChanged', function (accounts) {
+      getBalance();
+    })
+    </script>
+</html>
