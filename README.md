@@ -1,5 +1,5 @@
 
-# ERC20-Token-Payment-Gateway
+# Decentralized Marketplace with ERC20 Token Payment Gateway
 
 Custom ERC20 Token Payment Gateway for an E-Commerce Website(as an Example)
 
